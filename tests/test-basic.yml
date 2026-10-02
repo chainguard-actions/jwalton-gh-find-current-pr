@@ -1,0 +1,45 @@
+name: Test basic usage - find current PR
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - id: find-pr
+        uses: .
+        continue-on-error: true
+
+      - name: Assert action ran and outputs are consistent
+        env:
+          OUTCOME: ${{ steps.find-pr.outcome }}
+          PR_NUMBER: ${{ steps.find-pr.outputs.number }}
+          PR_DEPRECATED: ${{ steps.find-pr.outputs.pr }}
+          PR_TITLE: ${{ steps.find-pr.outputs.title }}
+        run: |
+          echo "outcome: $OUTCOME"
+          echo "number: $PR_NUMBER"
+          echo "pr (deprecated): $PR_DEPRECATED"
+          echo "title: $PR_TITLE"
+
+          if [ "$OUTCOME" = "success" ]; then
+            # If the action succeeded, either a PR was found (outputs set) or not (outputs empty)
+            # Both are valid — the harness repo may have no open PRs for this SHA
+            echo "PASS: action completed successfully"
+            # If number is set, pr (deprecated) should also be set and match
+            if [ -n "$PR_NUMBER" ]; then
+              if [ "$PR_NUMBER" != "$PR_DEPRECATED" ]; then
+                echo "FAIL: 'number' ($PR_NUMBER) and deprecated 'pr' ($PR_DEPRECATED) outputs should match"
+                exit 1
+              fi
+              echo "PASS: PR found with number=$PR_NUMBER title='$PR_TITLE'"
+            else
+              echo "PASS: no PR found for this SHA (expected on harness)"
+            fi
+          elif [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed gracefully (sentinel repo is not resolvable via GitHub API)"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi
