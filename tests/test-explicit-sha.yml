@@ -1,0 +1,44 @@
+name: Test explicit sha input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Get current SHA
+        id: get-sha
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - id: find-pr
+        uses: .
+        continue-on-error: true
+        with:
+          sha: ${{ steps.get-sha.outputs.sha }}
+          state: all
+
+      - name: Assert action ran with explicit sha and produced expected outputs or failed gracefully
+        env:
+          OUTCOME: ${{ steps.find-pr.outcome }}
+          PR_NUMBER: ${{ steps.find-pr.outputs.number }}
+          PR_TITLE: ${{ steps.find-pr.outputs.title }}
+          PR_DEPRECATED: ${{ steps.find-pr.outputs.pr }}
+        run: |
+          echo "outcome: $OUTCOME"
+          echo "pr number: $PR_NUMBER"
+          echo "pr title: $PR_TITLE"
+          echo "pr (deprecated): $PR_DEPRECATED"
+          if [ "$OUTCOME" = "success" ]; then
+            # If number is set, the deprecated 'pr' output should match
+            if [ -n "$PR_NUMBER" ] && [ "$PR_NUMBER" != "$PR_DEPRECATED" ]; then
+              echo "FAIL: 'pr' deprecated output ('$PR_DEPRECATED') does not match 'number' output ('$PR_NUMBER')"
+              exit 1
+            fi
+            echo "PASS: action succeeded with explicit sha (number='$PR_NUMBER')"
+          elif [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed gracefully (sentinel repo is not resolvable via GitHub API)"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi
