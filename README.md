@@ -9,6 +9,7 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 | Version | Tag | Upstream commit |
 |---------|-----|-----------------|
 | v1 | [`v1`](https://github.com/chainguard-actions/jwalton-gh-find-current-pr/tree/v1) | [`f3d61b4`](https://github.com/jwalton/gh-find-current-pr/commit/f3d61b485d2801773f7a07b2aaa3306bd8f8e653) |
+| v1.3.5 | [`v1.3.5`](https://github.com/chainguard-actions/jwalton-gh-find-current-pr/tree/v1.3.5) | [`f3d61b4`](https://github.com/jwalton/gh-find-current-pr/commit/f3d61b485d2801773f7a07b2aaa3306bd8f8e653) |
 
 ## Privacy
 
